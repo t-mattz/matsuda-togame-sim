@@ -10,7 +10,8 @@ $(document).ready(function(){
 		nextBatter(v);
 	};
 	class Versus {
-		constructor() {
+		constructor(trials) {
+			this.trials = trials;
 			this.inning = 1;
 			this.outs = 0;
 			this.runsByInning = [0,0,0,0,0,0,0,0,0];
@@ -56,7 +57,6 @@ $(document).ready(function(){
 			this.message = new Array();
 		}
 		setMessage(str) {
-			
 			this.message.push(str);
 		}
 		getMessage() {
@@ -273,7 +273,18 @@ $(document).ready(function(){
 			
 		}
 		setScoreBoard() {
-			$('#score-'+ (this.inning)).text(this.runsByInning[this.inning - 1]);
+		  let inning = this.inning;
+			$('#score-' + inning).text(this.runsByInning[inning - 1]);
+			
+			$('#score-' + inning).on('click', function(){
+				if ($(window).width() < 481) {
+					$("html,body").animate({
+						scrollTop : $('#inning-' + inning).offset().top - $('#score-board').height() - 10
+					}, {
+						queue : false
+					});
+				}
+			});
 			$('#score-total').text(this.runsTotal);
 		}
 		drawSummary () {
@@ -304,20 +315,48 @@ $(document).ready(function(){
 			$('#restart').show();
 			$(window).scrollTop($('#target').offset().top);
 			v.drawSummary();
+			
+			if ($('#auto').prop('checked')) {
+				let cont = false;
+				if ('over' === $('#condition').val()) {
+					if (Number($('#score-total').text()) < $('#limit').val()) {
+						cont = true;
+					}
+				} else if ('under' === $('#condition').val()) {
+					if (Number($('#score-total').text()) > $('#limit').val()) {
+						cont = true;
+					}
+				}
+				if (cont) {
+					$('#restart').click();
+				} else {
+					alert(v.trials + "回試行しました。");
+				}
+			}
 		} else {
 			next(v);
 		}
 	}
-	let v = new Versus();
+	let trials = 1;
+	let v = new Versus(trials);
 	$('#start, #start_').on('click', function(){
-		v.setPace($('#pace').val());
-		$('#start, #past').hide();
+		let pace = 0;
+		if (!$('#auto').prop('checked')) {
+			pace = $('#pace').val();
+		}
+		v.setPace(pace);
+		$('#start').hide();
 		$('#description').hide();
 		nextBatter(v);
 	});
 	$('#restart').on('click', function(){
-		v = new Versus();
-		v.setPace($('#pace').val());
+		trials = v.trials + 1;
+		v = new Versus(trials);
+		let pace = 0;
+		if (!$('#auto').prop('checked')) {
+			pace = $('#pace').val();
+		}
+		v.setPace(pace);
 		$(this).hide();
 		nextBatter(v);
 	});
