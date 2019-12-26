@@ -217,6 +217,7 @@ $(document).ready(function(){
 					break;
 				case 3: // 1B
 					if (this.runners[2]) {
+						this.runners[2] = 0;
 						runs++;
 					}
 					if (this.runners[1]) {
