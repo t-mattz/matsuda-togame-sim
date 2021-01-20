@@ -9,9 +9,15 @@ $(document).ready(function(){
 		await wait(v.pace);
 		nextBatter(v);
 	};
-	class Versus {
-		constructor(trials) {
-			this.trials = trials;
+	/*
+	 * 試合クラス 
+	 */
+	class Match {
+		/*
+		 * 初期化処理
+		 */
+		constructor() {
+			// 各種変数の初期化
 			this.inning = 1;
 			this.outs = 0;
 			this.runsByInning = [0,0,0,0,0,0,0,0,0];
@@ -43,6 +49,10 @@ $(document).ready(function(){
 			this.message;
 			this.allReset();
 		}
+
+		/*
+		 * 描画の初期化処理
+		 */
 		allReset() {
 			for (let i = 1; i < 10; i++) {
 				$('#inning-' + i).find('ol').empty();
@@ -51,17 +61,32 @@ $(document).ready(function(){
 			}
 			$('#score-total').empty();
 			$('#summary td').empty();
-		
 		}
+
+		/*
+		 * メッセージキューの初期化
+		 */
 		resetMessage() {
 			this.message = new Array();
 		}
+
+		/*
+		 * メッセージキューに追加する
+		 */
 		setMessage(str) {
 			this.message.push(str);
 		}
+
+		/*
+		 * メッセージ内容の取得
+		 */
 		getMessage() {
 			return this.message.join(' ');
 		}
+
+		/*
+		 * 現在のアウトカウントをメッセージ用に変換して取得
+		 */
 		getOutCount() {
 			switch(this.outs) {
 				case 0:
@@ -72,6 +97,10 @@ $(document).ready(function(){
 					return '二死';
 			}
 		}
+
+		/*
+		 * 現在の走者状況をメッセージ用に変換して取得
+		 */
 		getRunners () {
 			if (this.runners[0] && this.runners[1] && this.runners[2]) {
 				return '満塁';
@@ -85,6 +114,10 @@ $(document).ready(function(){
 				return '走者なし';
 			}
 		}
+
+		/*
+		 * 打席結果の後処理
+		 */
 		afterResult(result) {
 			if (result.index > 5) {
 				this.outs++;
@@ -108,15 +141,26 @@ $(document).ready(function(){
 				this.inningHasRunner = 0;
 			}
 		}
+		/*
+		 * 打席結果を描画
+		 */
 		displayMessage(){
 			let lid = '#inning-' + this.inning;
 			$(lid).find('ol').append($('<li>').html(this.getMessage()));
 			$(lid).show();
 			$(window).scrollTop($('#target').offset().top);
 		}
+
+		/*
+		 * 試合終了判定
+		 */
 		isGameSet () {
 			return (this.inning > 9);
 		}
+
+		/*
+		 * 打席結果の算出
+		 */
 		pickResult() {
 			this.resetMessage('');
 			this.setMessage('[' + this.batter + '番 松田]');
@@ -132,6 +176,7 @@ $(document).ready(function(){
 				}
 			}
 			result = {'index': idx, 'result' : this.resultTable[idx]};
+			// 打順ごとの打数等を加算
 			switch (idx) {
 				case 0:
 					this.results[this.batter - 1][0]++;
@@ -158,9 +203,13 @@ $(document).ready(function(){
 			}
 			return result;
 		}
+
+		/*
+		 * 打席結果の計算処理
+		 */
 		calcResult(res) {
 			let runs = 0;
-			let cond = '';
+			let modifier = '';
 			switch(res.index) {
 				case 0: // ホームラン
 					runs = this.runners[0] + this.runners[1] + this.runners[2] + 1;
@@ -169,14 +218,14 @@ $(document).ready(function(){
 					this.runsTotal += runs;
 					switch(runs) {
 						case 1:
-							cond = 'ソロ';
+							modifier = 'ソロ';
 							break;
 						case 2:
 						case 3:
-							cond = runs + 'ラン';
+							modifier = runs + 'ラン';
 							break;
 						case 4:
-							cond = '満塁';
+							modifier = '満塁';
 						default:
 							break;
 					}
@@ -192,7 +241,7 @@ $(document).ready(function(){
 							break;
 						case 2:
 						case 3:
-							cond = '走者一掃';
+							modifier = '走者一掃';
 						default:
 							break;
 					}
@@ -212,7 +261,7 @@ $(document).ready(function(){
 					this.runsByInning[this.inning - 1] += runs;
 					this.runsTotal += runs;
 					if (runs > 1 && runs == runnerCount) {
-						cond = '走者一掃';
+						modifier = '走者一掃';
 					}
 					break;
 				case 3: // 1B
@@ -235,13 +284,13 @@ $(document).ready(function(){
 					this.runsByInning[this.inning - 1] += runs;
 					this.runsTotal += runs;
 					if (runs > 0) {
-						cond = 'タイムリー';
+						modifier = 'タイムリー';
 					}
 					break;
 				case 4: // B
 				case 5: // DB
 					if (this.runners[0] && this.runners[1] && this.runners[2]) {
-						cond = '押し出し';
+						modifier = '押し出し';
 						runs = 1;
 						this.runsByInning[this.inning - 1] += runs;
 						this.runsTotal += runs;
@@ -256,12 +305,12 @@ $(document).ready(function(){
 				case 6:
 				case 7:
 					if (this.outs == 2 && (this.runners[1] + this.runners[2])) {
-						cond = '決定機を逃す';
+						modifier = '決定機を逃す';
 					}
 				default:
 					break;
 			}
-			this.setMessage('<span class="result-' + res.index + '">' + cond + res.result + '</span>');
+			this.setMessage('<span class="result-' + res.index + '">' + modifier + res.result + '</span>');
 			if (runs) {
 				this.setMessage(runs + '点追加！');
 				if (this.runsByInning[this.inning - 1] >= 10) {
@@ -269,25 +318,20 @@ $(document).ready(function(){
 				} else {
 					this.setMessage('この回' + this.runsByInning[this.inning - 1] + '点目！');
 				}
-				
 			}
-			
 		}
+
+		/*
+		 * スコアボード（イニング）の描画
+		 */
 		setScoreBoard() {
-		  let inning = this.inning;
-			$('#score-' + inning).text(this.runsByInning[inning - 1]);
-			
-			$('#score-' + inning).on('click', function(){
-				if ($(window).width() < 481) {
-					$("html,body").animate({
-						scrollTop : $('#inning-' + inning).offset().top - $('#score-board').height() - 10
-					}, {
-						queue : false
-					});
-				}
-			});
+			$('#score-'+ (this.inning)).text(this.runsByInning[this.inning - 1]);
 			$('#score-total').text(this.runsTotal);
 		}
+
+		/*
+		 * スコアボード（集計）の描画
+		 */
 		drawSummary () {
 			$('#summary').show();
 			let d = 0, h = 0, r = 0, k = 0;
@@ -303,10 +347,22 @@ $(document).ready(function(){
 			$('#summary').find('td').append($('<p>').text('打率 : '+ ((h / d).toString().substr(1) + '00').substr(0, 4)));
 			$('body').css('padding-top','290px');
 		}
+
+		/*
+		 * 描画スピードの設定
+		 */
 		setPace(val) {
 			this.pace = val;
 		}
 	}
+
+	/* =====================================================================
+	 * functions
+	 ===================================================================== */
+
+	/*
+	 * 次打者の呼び出し
+	 */
 	function nextBatter(v) {
 		let result = v.pickResult();
 		v.calcResult(result);
@@ -316,57 +372,58 @@ $(document).ready(function(){
 			$('#restart').show();
 			$(window).scrollTop($('#target').offset().top);
 			v.drawSummary();
-			
-			if ($('#auto').prop('checked')) {
-				let cont = false;
-				if ('over' === $('#condition').val()) {
-					if (Number($('#score-total').text()) < $('#limit').val()) {
-						cont = true;
-					}
-				} else if ('under' === $('#condition').val()) {
-					if (Number($('#score-total').text()) > $('#limit').val()) {
-						cont = true;
-					}
-				}
-				if (cont) {
-					$('#restart').click();
-				} else {
-					alert(v.trials + "回試行しました。");
-				}
-			}
 		} else {
 			next(v);
 		}
 	}
-	let trials = 1;
-	let v = new Versus(trials);
+
+	/*
+	 * main
+	 */
+	let v = new Match();
+
+	/*
+	 * 始めるボタン押下時の処理
+	 */
 	$('#start, #start_').on('click', function(){
-		let pace = 0;
-		if (!$('#auto').prop('checked')) {
-			pace = $('#pace').val();
-		}
-		v.setPace(pace);
-		$('#start').hide();
+		v.setPace($('#pace').val());
+		$('#start, #past').hide();
 		$('#description').hide();
 		nextBatter(v);
 	});
+
+	/*
+	 * もう一回ボタン押下時の処理
+	 */
 	$('#restart').on('click', function(){
-		trials = v.trials + 1;
-		v = new Versus(trials);
-		let pace = 0;
-		if (!$('#auto').prop('checked')) {
-			pace = $('#pace').val();
-		}
-		v.setPace(pace);
+		v = new Match();
+		v.setPace($('#pace').val());
 		$(this).hide();
 		nextBatter(v);
 	});
+
+	/*
+	 * スコアボードをクリックしたら畳む
+	 */
 	$('#summary').on('click', function() {
 		$(this).find('p, hr').toggle();
 		$(this).height('10px');
 		$(this).find('td').css({'height':'10px','overflow':'hidden'});
 	});
+
+	/*
+	 * ペース変更時の処理
+	 */
 	$('#pace').on('change', function() {
 		v.setPace($('#pace').val());
+	});
+
+	/*
+	 * イニングの数字をクリックしたらその回の結果にスクロール
+	 */
+	$('#score-1,#score-2,#score-3,#score-4,#score-4,#score-5,#score-6,#score-7,#score-8,#score-9').on('click', function() {
+		let target = $('#'+ $(this).attr('id').replace(/score/, 'inning'));
+		if (!target.length) return;
+		$('html').animate({scrollTop: target.offset().top - $('#summary').height() - 100}, 500, 'swing');
 	});
 });
