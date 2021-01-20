@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>松田 vs 十亀シミュレーター</title>
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-<script>if(location.href.match(/^http:/))location.href=location.href.replace(/http:/, "https:");</script>
-<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
-<script src='yakiu.js?20190926'></script>
-<link href='yakiu.css?20190926' rel="stylesheet" type="text/css" />
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script src="jquery.js"></script>
+<script src='yakiu.js?202101201727'></script>
+<link href='yakiu.css?202101201727' rel="stylesheet" type="text/css" />
 <script>
      (adsbygoogle = window.adsbygoogle || []).push({
           google_ad_client: "ca-pub-0787762274440627",
@@ -24,7 +22,7 @@
 </div>
 <section id='description'>
 <h2>これって何??</h2>
-<p>2019/6/2までの福岡ソフトバンクホークの松田宣浩選手と埼玉西武ライオンズ十亀剣投手の対戦成績を元に、1番から9番まで松田選手が並んだ打線を相手に十亀投手が1試合投げ抜いたらどうなるかを、単純なくじ引きでシミュレーションするものです。</p><p>Let's click <span id='start_'>”始める”</span></p>
+<p>2019/5/21時点の福岡ソフトバンクホークの松田宣浩選手と埼玉西武ライオンズ十亀剣投手の対戦成績を元に、1番から9番まで松田選手が並んだ打線を相手に十亀投手が1試合投げ抜いたらどうなるかを、単純なくじ引きでシミュレーションするものです。</p><p>Let's click <span id='start_'>”始める”</span></p>
 </section>
 <ol id='result'>
   <li id='inning-1'><ol></ol></li>
@@ -39,19 +37,8 @@
 </ol>
 <div id='bottom'></div>
 <div>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- small2 -->
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-0787762274440627"
-     data-ad-slot="7520524550"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script><input type='button' value='' id='next-batter' />
-<input type='button' value='もう一回' id='restart' /><!-- <br />
-<input type='checkbox' id='auto' /><input type='text' value='1' id='limit' size='3' />点<select id='condition'><option value='over'>以上</option><option value='under'>以下</option></select>が出るまで自動で繰り返す -->
+<input type='button' value='' id='next-batter' />
+<input type='button' value='もう一回' id='restart' />
 </div>
 <table id='score-board'>
 <tr><th>回</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>計</th></tr>
@@ -88,6 +75,6 @@
 </table>
 </div>
 <div id='target'></div>
-<p id='pace-range'>早く <input type='range' min='1' max='1000' id='pace' value="1" /> ゆっくり</p>
+<p id='pace-range'>早く <input type='range' min='1' max='1000' id='pace' /> ゆっくり</p>
 </body>
 </html>
