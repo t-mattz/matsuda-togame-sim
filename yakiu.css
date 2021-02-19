@@ -79,6 +79,7 @@ body {
 	margin:0 0 0 .4em;
 	padding:0;
 	text-align:left;
+	font-family:monospace;
 }
 #description {
 	box-sizing:border-box;
