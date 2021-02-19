@@ -20,7 +20,7 @@ $(document).ready(function(){
 			// 各種変数の初期化
 			this.inning = 1;
 			this.outs = 0;
-			this.runsByInning = [0,0,0,0,0,0,0,0,0];
+			this.aRunsByInning = [null,0,0,0,0,0,0,0,0,0];
 			this.runsTotal = 0;
 			this.runners = [0,0,0];
 			this.batter = 1;
@@ -44,12 +44,31 @@ $(document).ready(function(){
 				"三振",   // 6
 				"凡退",   // 7
 			];
-			this.results = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+			this.results = [
+				null,
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0],
+				[0,0,0,0,0]
+			];
 			this.inningHasRunner = 0;
 			this.message;
 			this.allReset();
 		}
-
+		/*
+		 * イニングごとの得点を取得
+		 * 
+		 * 引数を渡した時は加算して返す
+		 */
+		runsByInning = (runs = 0) => {
+			this.aRunsByInning[this.inning] += runs;
+			return this.aRunsByInning[this.inning];
+		}
 		/*
 		 * 描画の初期化処理
 		 */
@@ -179,16 +198,16 @@ $(document).ready(function(){
 			// 打順ごとの打数等を加算
 			switch (idx) {
 				case 0:
-					this.results[this.batter - 1][0]++;
-					this.results[this.batter - 1][1]++;
-					this.results[this.batter - 1][2]++;
+					this.results[this.batter][0]++;
+					this.results[this.batter][1]++;
+					this.results[this.batter][2]++;
 					this.inningHasRunner = 1;
 					break;
 				case 1:
 				case 2:
 				case 3:
-					this.results[this.batter - 1][0]++;
-					this.results[this.batter - 1][1]++;
+					this.results[this.batter][0]++;
+					this.results[this.batter][1]++;
 					this.inningHasRunner = 1;
 					break;
 				case 4:
@@ -196,9 +215,9 @@ $(document).ready(function(){
 					this.inningHasRunner = 1;
 					break;
 				case 6:
-					this.results[this.batter - 1][3]++;
+					this.results[this.batter][3]++;
 				case 7:
-					this.results[this.batter - 1][0]++;
+					this.results[this.batter][0]++;
 					break;
 			}
 			return result;
@@ -208,21 +227,23 @@ $(document).ready(function(){
 		 * 打席結果の計算処理
 		 */
 		calcResult(res) {
-			let runs = 0;
 			let modifier = '';
+			let isPreemptive = !this.runsTotal;
+			let runsBeforeAtBat = this.runsByInning();
+			let runsAtBat = 0;
 			switch(res.index) {
 				case 0: // ホームラン
-					runs = this.runners[0] + this.runners[1] + this.runners[2] + 1;
+					runsAtBat = this.runners[0] + this.runners[1] + this.runners[2] + 1;
 					this.runners[0] = this.runners[1] = this.runners[2] = 0;
-					this.runsByInning[this.inning - 1] += runs;
-					this.runsTotal += runs;
-					switch(runs) {
+					this.runsByInning(runsAtBat);
+					this.runsTotal += runsAtBat;
+					switch(runsAtBat) {
 						case 1:
 							modifier = 'ソロ';
 							break;
 						case 2:
 						case 3:
-							modifier = runs + 'ラン';
+							modifier = runsAtBat + 'ラン';
 							break;
 						case 4:
 							modifier = '満塁';
@@ -231,13 +252,14 @@ $(document).ready(function(){
 					}
 					break;
 				case 1: // 3B
-					runs = this.runners[0] + this.runners[1] + this.runners[2];
+					runsAtBat = this.runners[0] + this.runners[1] + this.runners[2];
 					this.runners[0] = this.runners[1] = 0;
 					this.runners[2] = 1;
-					this.runsByInning[this.inning - 1] += runs;
-					this.runsTotal += runs;
-					switch(runs) {
+					this.runsByInning(runsAtBat);
+					this.runsTotal += runsAtBat;
+					switch(runsAtBat) {
 						case 1:
+							modifier = 'タイムリー';
 							break;
 						case 2:
 						case 3:
@@ -248,42 +270,45 @@ $(document).ready(function(){
 					
 					break;
 				case 2: // 2B
-					runs = this.runners[1] + this.runners[2];
+					runsAtBat = this.runners[1] + this.runners[2];
 					let runnerCount = this.runners[0] + this.runners[1] + this.runners[2];
 					if (2 == this.outs && this.runners[0]) {
 						this.runners[2] = 0;
-						runs++;
+						runsAtBat++;
 					} else if (this.runners[0]){
 						this.runners[2] = 1;
 					}
 					this.runners[0] = 0;
 					this.runners[1] = 1;
-					this.runsByInning[this.inning - 1] += runs;
-					this.runsTotal += runs;
-					if (runs > 1 && runs == runnerCount) {
-						modifier = '走者一掃';
+					this.runsByInning(runsAtBat);
+					this.runsTotal += runsAtBat;
+					if (runsAtBat) {
+						modifier = 'タイムリー';
+					}
+					if (runsAtBat > 1 && runsAtBat == runnerCount) {
+						modifier = '走者一掃' + modifier;
 					}
 					break;
 				case 3: // 1B
 					if (this.runners[2]) {
 						this.runners[2] = 0;
-						runs++;
+						runsAtBat++;
 					}
 					if (this.runners[1]) {
 						this.runners[2] = 1;
 						this.runners[1] = 0;
 						if (2 == this.outs) {
 							this.runners[2] = 0;
-							runs++;
+							runsAtBat++;
 						}
 					}
 					if (this.runners[0]) {
 						this.runners[1] = 1;
 					}
 					this.runners[0] = 1;
-					this.runsByInning[this.inning - 1] += runs;
-					this.runsTotal += runs;
-					if (runs > 0) {
+					this.runsByInning(runsAtBat);
+					this.runsTotal += runsAtBat;
+					if (runsAtBat > 0) {
 						modifier = 'タイムリー';
 					}
 					break;
@@ -291,9 +316,9 @@ $(document).ready(function(){
 				case 5: // DB
 					if (this.runners[0] && this.runners[1] && this.runners[2]) {
 						modifier = '押し出し';
-						runs = 1;
-						this.runsByInning[this.inning - 1] += runs;
-						this.runsTotal += runs;
+						runsAtBat = 1;
+						this.runsByInning(runsAtBat);
+						this.runsTotal += runsAtBat;
 					} else if (! this.runners[0]){
 						this.runners[0] = 1;
 					} else if (2 == (this.runners[0] + this.runners[1] + this.runners[2])) {
@@ -310,13 +335,19 @@ $(document).ready(function(){
 				default:
 					break;
 			}
+			if (isPreemptive && runsAtBat) {
+				modifier = '先制' + modifier;
+			}
 			this.setMessage('<span class="result-' + res.index + '">' + modifier + res.result + '</span>');
-			if (runs) {
-				this.setMessage(runs + '点追加！');
-				if (this.runsByInning[this.inning - 1] >= 10) {
-					this.setMessage('この回<strong>' + this.runsByInning[this.inning - 1] + '</strong>点目！');
+			if (runsAtBat) {
+				this.setMessage(runsAtBat + '点追加！');
+				this.results[this.batter][4] += runsAtBat;
+			}
+			if (runsAtBat && runsBeforeAtBat) {
+				if (this.runsByInning() >= 10) {
+					this.setMessage('この回<strong>' + this.runsByInning() + '</strong>点目！');
 				} else {
-					this.setMessage('この回' + this.runsByInning[this.inning - 1] + '点目！');
+					this.setMessage('この回' + this.runsByInning() + '点目！');
 				}
 			}
 		}
@@ -325,7 +356,7 @@ $(document).ready(function(){
 		 * スコアボード（イニング）の描画
 		 */
 		setScoreBoard() {
-			$('#score-'+ (this.inning)).text(this.runsByInning[this.inning - 1]);
+			$('#score-'+ (this.inning)).text(this.runsByInning());
 			$('#score-total').text(this.runsTotal);
 		}
 
@@ -335,17 +366,29 @@ $(document).ready(function(){
 		drawSummary () {
 			$('#summary').show();
 			let d = 0, h = 0, r = 0, k = 0;
-			for(let i = 0; i < 9; i++) {
+			for(let i = 1; i <= 9; i++) {
 				d += this.results[i][0];
 				h += this.results[i][1];
 				r += this.results[i][2];
 				k += this.results[i][3];
-				$('#summary').find('td').append($('<p>').text((i+1)+'番松田 : '+this.results[i][0]+'打数 '+this.results[i][1]+'安打 '+this.results[i][2]+'本塁打 '+this.results[i][3]+'三振'));
+				for (let j = 0; j < 5; j++) {
+					this.results[i][j] = ((this.results[i][j] < 10) ? "&nbsp;" : "") + this.results[i][j];
+				}
+				$('#summary').find('td').append(
+					$('<p>').html(
+						(i) + '番松田：'
+							+ this.results[i][0] + '打数&thinsp;' + this.results[i][1]+'安打&thinsp;'
+							+ this.results[i][2] + '本塁打&thinsp;' + this.results[i][3] + '三振&thinsp;'
+							+ this.results[i][4] + '打点'
+					)
+				);
 			}
 			$('#summary').find('td').append($('<hr>'));
-			$('#summary').find('td').append($('<p>').text('全松田 : '+d+'打数 '+h+'安打 '+r+'本塁打 '+k+'三振'));
+			$('#summary').find('td').append(
+				$('<p>').text('全松田 : ' + d + '打数 ' + h + '安打 ' + r + '本塁打 ' + k + '三振')
+			);
 			$('#summary').find('td').append($('<p>').text('打率 : '+ ((h / d).toString().substr(1) + '00').substr(0, 4)));
-			$('body').css('padding-top','290px');
+			$('body').css('padding-top', '290px');
 		}
 
 		/*
